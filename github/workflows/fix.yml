@@ -1,0 +1,37 @@
+name: Fix paths
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move files
+        run: |
+          D=app/src/main
+          mkdir -p $D/java/com/example/pixellauncher $D/res/values $D/res/drawable $D/res/mipmap-anydpi-v26
+          find app/.github -type f | while read -r f; do
+            b=$(basename "$f")
+            p=$(dirname "$f")
+            case "$b" in
+              *.kt) mv -n "$f" $D/java/com/example/pixellauncher/ ;;
+              *)
+                case "$p" in
+                  */res/values) mv -n "$f" $D/res/values/ ;;
+                  */res/drawable) mv -n "$f" $D/res/drawable/ ;;
+                  */res/mipmap-anydpi-v26) mv -n "$f" $D/res/mipmap-anydpi-v26/ ;;
+                esac ;;
+            esac
+          done
+          rm -rf app/.github
+          find app -type f | sort
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add -A
+          git commit -m "Fix file paths" || true
+          git push
