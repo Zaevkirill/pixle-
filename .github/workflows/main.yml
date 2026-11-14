@@ -10,6 +10,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fix file paths
+        run: |
+          D=app/src/main
+          mkdir -p $D/java/com/example/pixellauncher $D/res/values $D/res/drawable $D/res/mipmap-anydpi-v26
+          if [ -d app/.github ]; then
+            find app/.github -type f | while read -r f; do
+              b=$(basename "$f")
+              p=$(dirname "$f")
+              case "$b" in
+                *.kt) mv -n "$f" $D/java/com/example/pixellauncher/ ;;
+                *)
+                  case "$p" in
+                    */res/values) mv -n "$f" $D/res/values/ ;;
+                    */res/drawable) mv -n "$f" $D/res/drawable/ ;;
+                    */res/mipmap-anydpi-v26) mv -n "$f" $D/res/mipmap-anydpi-v26/ ;;
+                  esac ;;
+              esac
+            done
+            rm -rf app/.github
+          fi
+          find app -type f | sort
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
