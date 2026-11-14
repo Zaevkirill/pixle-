@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 package com.example.pixellauncher
 
 import androidx.activity.compose.BackHandler
