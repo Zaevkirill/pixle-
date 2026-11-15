@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Unzip project
+        run: for f in *.zip; do unzip -q -o "$f"; done
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -21,9 +24,17 @@ jobs:
           gradle-version: 8.9
 
       - name: Build debug APK
+        working-directory: PixelLauncher
         run: gradle assembleDebug --no-daemon
+
+      - name: Build release APK
+        working-directory: PixelLauncher
+        continue-on-error: true
+        run: gradle assembleRelease --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PixelLauncher-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: PixelLauncher-apk
+          path: |
+            PixelLauncher/app/build/outputs/apk/debug/app-debug.apk
+            PixelLauncher/app/build/outputs/apk/release/app-release.apk
