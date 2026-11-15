@@ -2,6 +2,7 @@ name: Build APK
 
 on:
   push:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -10,45 +11,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fix file paths
-        run: |
-          D=app/src/main
-          mkdir -p $D/java/com/example/pixellauncher $D/res/values $D/res/drawable $D/res/mipmap-anydpi-v26
-          if [ -d app/.github ]; then
-            find app/.github -type f | while read -r f; do
-              b=$(basename "$f")
-              p=$(dirname "$f")
-              case "$b" in
-                *.kt) mv -n "$f" $D/java/com/example/pixellauncher/ ;;
-                *)
-                  case "$p" in
-                    */res/values) mv -n "$f" $D/res/values/ ;;
-                    */res/drawable) mv -n "$f" $D/res/drawable/ ;;
-                    */res/mipmap-anydpi-v26) mv -n "$f" $D/res/mipmap-anydpi-v26/ ;;
-                  esac ;;
-              esac
-            done
-            rm -rf app/.github
-          fi
-          find app -type f | sort
+      - name: Unzip project
+        run: for f in *.zip; do unzip -q -o "$f"; done
 
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: android-actions/setup-android@v3
-        with:
-          packages: ''
-
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: 8.7
+          gradle-version: 8.9
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        working-directory: PixelLauncher
+        run: gradle assembleDebug --no-daemon
+
+      - name: Build release APK
+        working-directory: PixelLauncher
+        continue-on-error: true
+        run: gradle assembleRelease --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PixelLauncher-debug-apk
-          path: "**/build/outputs/apk/debug/*.apk"
+          name: PixelLauncher-apk
+          path: |
+            PixelLauncher/app/build/outputs/apk/debug/app-debug.apk
+            PixelLauncher/app/build/outputs/apk/release/app-release.apk
